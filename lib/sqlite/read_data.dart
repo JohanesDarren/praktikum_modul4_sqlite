@@ -33,9 +33,23 @@ class _ListSahamState extends State<ListSaham> {
                   itemCount: daftarSaham.length,
                   itemBuilder: (context, index){
                     final saham = daftarSaham[index];
+                    final changeValue = saham.change ?? 0;
+                    final changeColor =
+                        changeValue < 0 ? Colors.red : Colors.green;
                     return ListTile(
                       title: Text(saham.ticker),
-                      subtitle: Text('Open: ${saham.open} | High: ${saham.high} | Last: ${saham.last} | Change: ${saham.change}%'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Open: ${saham.open ?? '-'}'),
+                          Text('High: ${saham.high ?? '-'}'),
+                          Text('Last: ${saham.last ?? '-'}'),
+                          Text(
+                            'Change: ${saham.change ?? '-'}%',
+                            style: TextStyle(color: changeColor),
+                          ),
+                        ],
+                      ),
                       onTap: (){
                         Navigator.push(
                           context,
