@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
-import 'buku.dart';
+import 'saham.dart';
 
-class DetailBuku extends StatefulWidget {
-  final Buku buku;
+class DetailSaham extends StatefulWidget {
+  final Saham saham;
 
-  const DetailBuku({super.key, required this.buku});
+  const DetailSaham({super.key, required this.saham});
 
   @override
-  State<DetailBuku> createState() => _DetailBukuState();
+  State<DetailSaham> createState() => _DetailSahamState();
 
 }
 
-class _DetailBukuState extends State<DetailBuku> {
+class _DetailSahamState extends State<DetailSaham> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Detail Buku"),
+        title: const Text("Detail Saham"),
       ),
       body: Center(
         child: Column(
           children: [
-            Text(widget.buku.nama_buku),
-            Text(widget.buku.isbn.toString()),
+            Text(widget.saham.ticker),
+            Text('Open: ${widget.saham.open}'),
+            Text('High: ${widget.saham.high}'),
+            Text('Last: ${widget.saham.last}'),
+            Text('Change: ${widget.saham.change}%'),
           ],
         )
       )

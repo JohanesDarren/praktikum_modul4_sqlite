@@ -1,25 +1,29 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'buku.dart';
+import 'saham.dart';
 
 // $conn = mysqli_connect('localhost', 'root', '', 'perpustakaan')
 
 Future<Database> openDb() async{
   final database = await openDatabase(
     'database_perpustakaan',
-    version:  3,
+    version:  4,
     onCreate: (db, version) async{
-      db.execute('''
-          CREATE TABLE buku (
-            bukuid INTEGER PRIMARY KEY AUTOINCREMENT,
-            nama_buku TEXT NOT NULL,
-            isbn INTEGER NOT NULL
+      await db.execute('''
+          CREATE TABLE saham (
+            tickerid INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            open INTEGER,
+            high INTEGER,
+            last INTEGER,
+            change REAL
           )
           ''');
+
+      await _seedSaham(db);
     },
       onUpgrade: (db, oldVersion, newVersion) async{
         if (oldVersion < 2) {
-          db.execute('''
+          await db.execute('''
           CREATE TABLE penerbit (
             penerbitid INTEGER PRIMARY KEY AUTOINCREMENT,
             nama_penerbit TEXT NOT NULL,
@@ -29,7 +33,7 @@ Future<Database> openDb() async{
         }
 
         if (oldVersion < 3) {
-          db.execute('''
+          await db.execute('''
           CREATE TABLE pengarang (
             pengarangid INTEGER PRIMARY KEY AUTOINCREMENT,
             nama_pengarang TEXT NOT NULL
@@ -37,14 +41,76 @@ Future<Database> openDb() async{
           ''');
         }
 
+        if (oldVersion < 4) {
+          await db.execute('DROP TABLE IF EXISTS buku');
+          await db.execute('''
+          CREATE TABLE saham (
+            tickerid INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            open INTEGER,
+            high INTEGER,
+            last INTEGER,
+            change REAL
+          )
+          ''');
+          await _seedSaham(db);
+        }
+
       },
       onDowngrade: (db, oldVersion, newVersion) async{
         await db.execute('DROP TABLE IF EXISTS penerbit');
+        await db.execute('DROP TABLE IF EXISTS pengarang');
         await db.execute('DROP TABLE IF EXISTS buku');
+        await db.execute('DROP TABLE IF EXISTS saham');
         await openDb();
       },
   );
   return database;
+}
+
+Future<void> _seedSaham(Database db) async {
+  final existing = Sqflite.firstIntValue(
+    await db.rawQuery('SELECT COUNT(*) FROM saham'),
+  );
+
+  if (existing != null && existing > 0) {
+    return;
+  }
+
+  const seedData = [
+    {
+      'ticker': 'TLKM',
+      'open': 3380,
+      'high': 3500,
+      'last': 3490,
+      'change': 2.05,
+    },
+    {
+      'ticker': 'AMMN',
+      'open': 6750,
+      'high': 6750,
+      'last': 6500,
+      'change': -3.7,
+    },
+    {
+      'ticker': 'BREN',
+      'open': 4500,
+      'high': 4610,
+      'last': 4580,
+      'change': 1.78,
+    },
+    {
+      'ticker': 'CUAN',
+      'open': 5200,
+      'high': 5525,
+      'last': 5400,
+      'change': 3.85,
+    },
+  ];
+
+  for (final saham in seedData) {
+    await db.insert('saham', saham);
+  }
 }
 
 class PenerbitQueryHandler{
@@ -54,47 +120,42 @@ class PenerbitQueryHandler{
 }
 // mysqli_query($conn, "SELECT * FROM buku")
 
-class BukuQueryHandler{
+class SahamQueryHandler{
   Future<Database> database() async {
     return openDb();
   }
-  // function tambahBuku($nama_buku, $isbn)
-  //{
-   //  mysqli_query($conn, "INSERT INTO buku (nama_buku, isbn) VALUES ('$nama_buku', $isbn)")
-  // }
-  Future<int> tambahBuku(String nama_buku, int isbn) async{
+  Future<int> tambahSaham(Saham saham) async{
     final db = await database();
-    //"INSERT INTO buku (nama_buku, isbn) VALUES ('$nama_buku', $isbn)"
     final id = await db.rawInsert(
-      'INSERT INTO buku (nama_buku, isbn) VALUES (?, ?)',
-      [nama_buku, isbn]
+      'INSERT INTO saham (ticker, open, high, last, change) VALUES (?, ?, ?, ?, ?)',
+      [saham.ticker, saham.open, saham.high, saham.last, saham.change]
     );
     return id;
   }
 
-  Future<List<Buku>> ambilSemuaBuku() async{
+  Future<List<Saham>> ambilSemuaSaham() async{
     final db = await database();
-    final List<Map<String, dynamic>> maps = await db.rawQuery('SELECT * FROM buku');
+    final List<Map<String, dynamic>> maps = await db.rawQuery('SELECT * FROM saham ORDER BY tickerid ASC');
 
     return List.generate(maps.length, (i){
-      return Buku.fromJson(maps[i]);
+      return Saham.fromJson(maps[i]);
     });
   }
 
-  Future<int> updateBuku(Buku buku) async {
+  Future<int> updateSaham(Saham saham) async {
     final db = await database();
 
     final result = await db.rawUpdate(
-      'UPDATE buku SET nama_buku = ?, isbn = ? WHERE bukuid = ?',
-      [buku.nama_buku, buku.isbn, buku.bukuid],
+      'UPDATE saham SET ticker = ?, open = ?, high = ?, last = ?, change = ? WHERE tickerid = ?',
+      [saham.ticker, saham.open, saham.high, saham.last, saham.change, saham.tickerid],
     );
 
     return result;
   }
 
-  Future<int> hapusBuku(int bukuid) async {
+  Future<int> hapusSaham(int tickerid) async {
     final db = await database();
-    final result = await db.delete('buku', where: 'bukuid = ?', whereArgs: [bukuid]);
+    final result = await db.delete('saham', where: 'tickerid = ?', whereArgs: [tickerid]);
 
     return result;
   }

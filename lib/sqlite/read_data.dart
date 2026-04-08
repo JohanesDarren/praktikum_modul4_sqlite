@@ -1,45 +1,45 @@
 import 'package:flutter/material.dart';
-import 'buku.dart';
+import 'saham.dart';
 import 'koneksi.dart';
 import 'detail_buku.dart';
 
-class ListBuku extends StatefulWidget {
-  const ListBuku({super.key});
+class ListSaham extends StatefulWidget {
+  const ListSaham({super.key});
 
   @override
-  State<ListBuku> createState() => _ListBukuState();
+  State<ListSaham> createState() => _ListSahamState();
 }
 
-class _ListBukuState extends State<ListBuku> {
-  List<Buku> daftarBuku = [];
+class _ListSahamState extends State<ListSaham> {
+  List<Saham> daftarSaham = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Contoh List Buku"),
+        title: const Text("Daftar Saham"),
       ),
-      body: FutureBuilder<List<Buku>>(
-        future: BukuQueryHandler().ambilSemuaBuku(),
+      body: FutureBuilder<List<Saham>>(
+        future: SahamQueryHandler().ambilSemuaSaham(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           } else {
-              daftarBuku = snapshot.data!;
+              daftarSaham = snapshot.data!;
 
               return ListView.builder(
-                  itemCount: daftarBuku.length,
+                  itemCount: daftarSaham.length,
                   itemBuilder: (context, index){
-                    final buku = daftarBuku[index];
+                    final saham = daftarSaham[index];
                     return ListTile(
-                      title: Text(buku.nama_buku),
-                      subtitle: Text(buku.isbn.toString()),
+                      title: Text(saham.ticker),
+                      subtitle: Text('Open: ${saham.open} | High: ${saham.high} | Last: ${saham.last} | Change: ${saham.change}%'),
                       onTap: (){
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => DetailBuku(buku: buku)),
+                          MaterialPageRoute(builder: (context) => DetailSaham(saham: saham)),
                         );
                       },
                     );
