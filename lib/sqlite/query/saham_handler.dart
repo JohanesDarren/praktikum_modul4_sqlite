@@ -30,13 +30,24 @@ class SahamQueryHandler {
 
   Future<List<Saham>> ambilSemuaSaham() async {
     final db = await database();
-    final List<Map<String, dynamic>> maps =
-        await db.rawQuery('SELECT * FROM saham');
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      'SELECT * FROM saham',
+    );
     return List.generate(maps.length, (i) => Saham.fromJson(maps[i]));
   }
 
   Future<int> hapusSaham(int id) async {
     final db = await database();
     return await db.delete('saham', where: 'tickerid = ?', whereArgs: [id]);
+  }
+
+  Future<int> updateSaham(Saham saham) async {
+    final db = await database();
+    return await db.update(
+      'saham',
+      saham.toMap(),
+      where: 'tickerid = ?',
+      whereArgs: [saham.tickerid],
+    );
   }
 }
