@@ -54,9 +54,8 @@ class _DaftarSahamState extends State<DaftarSaham> {
   }
 
   Color _warnaChange(double change) {
-    if (change > 0) return Colors.green;
     if (change < 0) return Colors.red;
-    return Colors.grey;
+    return Colors.green;
   }
 
   IconData _ikonChange(double change) {
@@ -100,80 +99,112 @@ class _DaftarSahamState extends State<DaftarSaham> {
                   itemBuilder: (context, index) {
                     final saham = _daftarSaham[index];
                     final wanra = _warnaChange(saham.change);
-                    return Card(
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    return Dismissible(
+                      key: ValueKey(saham.tickerid),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20.0),
+                        child: const Icon(Icons.delete, color: Colors.white),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            // Ticker badge
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: Colors.blue[800],
-                                borderRadius: BorderRadius.circular(10),
+                      onDismissed: (direction) async {
+                        final id = saham.tickerid;
+                        if (id != null) {
+                          // Hapus dari UI terlebih dahulu
+                          setState(() {
+                            _daftarSaham.removeAt(index);
+                          });
+                          
+                          // Hapus dari SQLite database
+                          await _handler.hapusSaham(id);
+                          
+                          // Tampilkan pesan
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${saham.ticker} berhasil dihapus'),
+                                duration: const Duration(seconds: 2),
                               ),
-                              child: Center(
-                                child: Text(
-                                  saham.ticker,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
+                            );
+                          }
+                        }
+                      },
+                      child: Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              // Ticker badge
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[800],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    saham.ticker,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            // Info harga
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Last: ${saham.last}',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Icon(_ikonChange(saham.change),
-                                              color: wanra, size: 22),
-                                          Text(
-                                            '${saham.change > 0 ? '+' : ''}${saham.change}%',
-                                            style: TextStyle(
-                                              color: wanra,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
+                              const SizedBox(width: 16),
+                              // Info harga
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Last: ${saham.last}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      _infoChip('Open', saham.open),
-                                      const SizedBox(width: 12),
-                                      _infoChip('High', saham.high),
-                                    ],
-                                  ),
-                                ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Icon(_ikonChange(saham.change),
+                                                color: wanra, size: 22),
+                                            Text(
+                                              '${saham.change > 0 ? '+' : ''}${saham.change}%',
+                                              style: TextStyle(
+                                                color: wanra,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        _infoChip('Open', saham.open),
+                                        const SizedBox(width: 12),
+                                        _infoChip('High', saham.high),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

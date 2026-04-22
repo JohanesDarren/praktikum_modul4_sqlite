@@ -34,4 +34,9 @@ class SahamQueryHandler {
         await db.rawQuery('SELECT * FROM saham');
     return List.generate(maps.length, (i) => Saham.fromJson(maps[i]));
   }
+
+  Future<int> hapusSaham(int id) async {
+    final db = await database();
+    return await db.delete('saham', where: 'tickerid = ?', whereArgs: [id]);
+  }
 }
