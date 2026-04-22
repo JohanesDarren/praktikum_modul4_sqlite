@@ -21,23 +21,36 @@ class _DaftarSahamState extends State<DaftarSaham> {
     _muatData();
   }
 
+  String? _errorMessage;
+
   Future<void> _muatData() async {
-    setState(() => _isLoading = true);
-
-    // Isi data jika belum ada
-    if (!_sudahDiisi) {
-      final existing = await _handler.ambilSemuaSaham();
-      if (existing.isEmpty) {
-        await _handler.isiDataSaham();
-        _sudahDiisi = true;
-      }
-    }
-
-    final data = await _handler.ambilSemuaSaham();
     setState(() {
-      _daftarSaham = data;
-      _isLoading = false;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      // Isi data jika belum ada
+      if (!_sudahDiisi) {
+        final existing = await _handler.ambilSemuaSaham();
+        if (existing.isEmpty) {
+          await _handler.isiDataSaham();
+          _sudahDiisi = true;
+        }
+      }
+
+      final data = await _handler.ambilSemuaSaham();
+      setState(() {
+        _daftarSaham = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+      print('Error muat data: $e');
+    }
   }
 
   Color _warnaChange(double change) {
@@ -69,9 +82,18 @@ class _DaftarSahamState extends State<DaftarSaham> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _daftarSaham.isEmpty
-              ? const Center(child: Text('Tidak ada data saham.'))
-              : ListView.separated(
+          : _errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Terjadi Kesalahan:\n$_errorMessage', 
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red)),
+                  ),
+                )
+              : _daftarSaham.isEmpty
+                  ? const Center(child: Text('Tidak ada data saham.'))
+                  : ListView.separated(
                   padding: const EdgeInsets.all(12),
                   itemCount: _daftarSaham.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),

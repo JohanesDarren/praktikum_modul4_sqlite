@@ -33,7 +33,6 @@ void main() async {
   }
 
   runApp(
-
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => KeranjangProvider()),
@@ -41,8 +40,7 @@ void main() async {
       ],
       child: const MaterialApp(
         home: DaftarSaham(),
-      ), // The widget tree that needs access to the providers
+      ), 
     ),
-
   );
 }

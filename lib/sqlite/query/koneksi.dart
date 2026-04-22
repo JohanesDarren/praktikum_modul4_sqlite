@@ -7,14 +7,32 @@ import '../dao/buku.dart';
 Future<Database> openDb() async{
   final database = await openDatabase(
     'database_perpustakaan',
-    version:  7,
+    version:  8,
     onCreate: (db, version) async{
-      db.execute('''
+      await db.execute('''
           CREATE TABLE buku (
             bukuid INTEGER PRIMARY KEY AUTOINCREMENT,
             nama_buku TEXT NOT NULL,
-            isbn INTEGER NOT NULL
+            isbn INTEGER NOT NULL,
+            penerbitid INTEGER REFERENCES penerbit(penerbitid) DEFAULT NULL
           )
+          ''');
+      await db.execute('''
+          CREATE TABLE saham (
+            tickerid INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticker TEXT NOT NULL,
+            open INTEGER,
+            high INTEGER,
+            last INTEGER,
+            change REAL
+          )
+        ''');
+      await db.execute('''
+            CREATE TABLE rekening (
+              nomor_rekening INTEGER PRIMARY KEY AUTOINCREMENT,
+              userid INTEGER NOT NULL,
+              saldo REAL NOT NULL
+            )
           ''');
     },
       onUpgrade: (db, oldVersion, newVersion) async{
@@ -64,7 +82,21 @@ Future<Database> openDb() async{
 
         if (oldVersion < 7) {
           db.execute('''
-            CREATE TABLE saham (
+            CREATE TABLE IF NOT EXISTS saham (
+              tickerid INTEGER PRIMARY KEY AUTOINCREMENT,
+              ticker TEXT NOT NULL,
+              open INTEGER,
+              high INTEGER,
+              last INTEGER,
+              change REAL
+            )
+          ''');
+        }
+
+        if (oldVersion < 8) {
+          // Fallback force creation in case web cached version 7 missed it
+          db.execute('''
+            CREATE TABLE IF NOT EXISTS saham (
               tickerid INTEGER PRIMARY KEY AUTOINCREMENT,
               ticker TEXT NOT NULL,
               open INTEGER,
